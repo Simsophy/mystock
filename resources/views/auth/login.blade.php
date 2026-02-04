@@ -9,12 +9,18 @@
     <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.min.css') }}" />
+    <style>
+        body.login-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+    </style>
 </head>
 <body class="hold-transition login-page">
     <div class="login-box">
         <div class="login-logo">
             <a href="{{ url('/') }}">
-                <img src="{{ asset('logo.png') }}" alt="Your Company Logo" width="150" class="img-fluid" />
+                <img src="{{ asset('logo.jpg') }}" alt="Your Company Logo" width="150" class="img-fluid" />
             </a>
         </div>
 
