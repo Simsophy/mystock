@@ -50,7 +50,7 @@
             <td>{{ $user->username }}</td>
             <td>{{ $user->email }}</td>
             <td>{{ $user->role_id}}</td>
-             <td>{{ $user->role_name}}</td>
+             <td>{{ $user->role_name ?? 'No Role' }}</td>
 
             <td>{{ $user->lang}}</td>
             

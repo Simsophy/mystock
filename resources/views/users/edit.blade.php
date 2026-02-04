@@ -2,7 +2,9 @@
 
 @section('title', 'Edit User')
 @section('page_title', 'Edit User')
-
+@section('css')
+<link rel="stylesheet" href="{{asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css')}}">
+<link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
 @section('content')
 <div class="card">
     <div class="card-header">
@@ -66,14 +68,41 @@
     </div>
 
     <!-- Photo -->
-    
-
-    <!-- Save & Cancel Buttons -->
-    <x-form.save url="{{ route('user.index') }}" />
-</form>
- </div>
-
+    <div class="col-sm-6">
+                    <div class="form-group row">
+                        <label for="photo" class="col-sm-3">Photo</label>
+                        <div class="col-sm-9">
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" onchange="preview(event)">
+                            <div class="mt-2">
+                                <img src="{{asset($user->photo)}}" alt="" id="img" width="150">
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                                <a href="{{route('user.index')}}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            </form>
+        </div>
+    </div>
 @endsection
-
-
-
+@section('js')
+<script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
+<script>
+    $(document).ready(function(){
+        $('.select2').select2();
+    });
+    function preview(event)
+    {
+        var img = document.getElementById('img');
+        img.src = URL.createObjectURL(event.target.files[0]);
+    }
+</script>
+@endsection

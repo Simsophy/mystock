@@ -1,34 +1,40 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Imports\ProductImport;
-use App\EXports\ProductEXport;
-use \App\Http\Middleware\Translate;
+use App\Exports\ProductExport;
 use Illuminate\Http\Request;
-use View;
-use DB;
-use Auth;
-use Excel;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 require_once app_path('Helpers/functions.php');
 
 class ProductController extends Controller
 {
- public function __construct()
- {
-    $this->middleware(function ($request,$next){
-            app()->setLocale(Auth::user()->lang);
-             return $next($request);
-    });
-   
-        view::share('active','product');
+    public function __construct()
+    {
+        // Set locale based on user language
+        $this->middleware(function ($request, $next) {
+            if (Auth::check()) {
+                app()->setLocale(Auth::user()->lang);
+            }
+            return $next($request);
+        });
+
+        // Share active menu with all views
+        View::share('active', 'product');
     }
+
+    // List products
     public function index()
     {
-         if(!check('product','list')){
-       return view ('permissions.no');
-     }
-        
+        if (!check('product', 'list')) {
+            return view('permissions.no');
+        }
+
         $categories = DB::table('categories')->where('active', 1)->get();
 
         $products = DB::table('products')
@@ -41,7 +47,7 @@ class ProductController extends Controller
         return view('products.index', compact('categories', 'products'));
     }
 
-
+    // Search products
     public function search(Request $request)
     {
         $cid = $request->input('cid', 'all');
@@ -61,85 +67,77 @@ class ProductController extends Controller
             $query->where('products.name', 'like', '%' . $q . '%');
         }
 
-        // The only change is here: using paginate() instead of get()
         $products = $query->paginate(4);
-
         $categories = DB::table('categories')->where('active', 1)->get();
 
-        return view('products.index', [
-            'products' => $products,
-            'categories' => $categories,
-        ]);
+        return view('products.index', compact('products', 'categories'));
     }
 
-
+    // Show create form
     public function create()
     {
-
         $categories = DB::table('categories')->where('active', 1)->get();
         $units = DB::table('units')->where('active', 1)->get();
 
         return view('products.create', compact('categories', 'units'));
     }
+
+    // Store new product
     public function store(Request $request)
     {
-         if(!check('product','list')){
-       return view ('permissions.no');
-     }
+        if (!check('product', 'list')) {
+            return view('permissions.no');
+        }
+
         $validated = $request->validate([
-            'code' => 'required|string',
-            'user_name' => 'required|string', // changed from name
+            'code' => 'required|string|unique:products,code',
+            'name' => 'required|string',
             'price' => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
             'unit_id' => 'required|exists:units,id',
             'alert' => 'nullable|integer',
+            'description' => 'nullable|string',
         ]);
 
-        DB::table('products')->insert($validated);
-
-
         DB::table('products')->insert([
-            'code' => $request->code,
-            'name' => $request->name,
-            'price' => $request->price,
-            'category_id' => $request->category_id,
-            'unit_id' => $request->unit_id,
-            'alert' => $request->alert,
+            'code' => $validated['code'],
+            'name' => $validated['name'],
+            'price' => $validated['price'],
+            'category_id' => $validated['category_id'],
+            'unit_id' => $validated['unit_id'],
+            'alert' => $validated['alert'] ?? 0,
             'active' => 1,
-            'description' => '',
+            'description' => $validated['description'] ?? '',
         ]);
 
         return redirect()->route('product.index')->with('success', 'Product created successfully.');
     }
 
+    // Show edit form
     public function edit($id)
     {
-        
-
-        // Get the product by ID
         $product = DB::table('products')->where('id', $id)->first();
 
         if (!$product) {
             return redirect()->route('product.index')->with('error', 'Product not found.');
         }
 
-        // Get categories and units for dropdowns
         $categories = DB::table('categories')->where('active', 1)->get();
         $units = DB::table('units')->where('active', 1)->get();
 
         return view('products.edit', compact('product', 'categories', 'units'));
     }
 
-    // Handle update form submission
+    // Update product
     public function update(Request $request, $id)
     {
         $request->validate([
             'code' => "required|unique:products,code,$id",
-            'name' => 'required',
+            'name' => 'required|string',
             'price' => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
             'unit_id' => 'required|exists:units,id',
-            'alert' => 'nullable|numeric',
+            'alert' => 'nullable|integer',
             'description' => 'nullable|string',
         ]);
 
@@ -149,8 +147,8 @@ class ProductController extends Controller
             'price' => $request->price,
             'category_id' => $request->category_id,
             'unit_id' => $request->unit_id,
-            'alert' => $request->alert,
-            'description' => $request->description,
+            'alert' => $request->alert ?? 0,
+            'description' => $request->description ?? '',
         ]);
 
         if ($updated) {
@@ -160,7 +158,7 @@ class ProductController extends Controller
         }
     }
 
-
+    // Delete product
     public function delete($id)
     {
         $deleted = DB::table('products')->where('id', $id)->delete();
@@ -171,6 +169,8 @@ class ProductController extends Controller
             return redirect()->route('product.index')->with('error', 'Product not found or could not be deleted.');
         }
     }
+
+    // Show product details
     public function detail($id)
     {
         $product = DB::table('products')
@@ -186,12 +186,12 @@ class ProductController extends Controller
 
         return view('products.detail', compact('product'));
     }
+
+    // Export products as CSV
     public function export(Request $request)
     {
-        // Get search/filter inputs, for example 'cid' category id
         $cid = $request->input('cid');
 
-        // Build query with filter if any
         $query = DB::table('products')
             ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
             ->leftJoin('units', 'products.unit_id', '=', 'units.id')
@@ -203,14 +203,12 @@ class ProductController extends Controller
 
         $products = $query->get();
 
-        // Create CSV headers
         $headers = [
             "Content-Type" => "text/csv",
             "Content-Disposition" => "attachment; filename=products_export.csv",
         ];
 
-        // Create callback to output CSV data
-        $callback = function() use ($products) {
+        $callback = function () use ($products) {
             $file = fopen('php://output', 'w');
 
             // Header row
@@ -234,7 +232,7 @@ class ProductController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-
+    // Import products from Excel/CSV
     public function import(Request $request)
     {
         $request->validate([
@@ -245,6 +243,8 @@ class ProductController extends Controller
 
         return redirect()->route('product.index')->with('success', 'Products imported successfully.');
     }
+
+    // Show low stock products
     public function low()
     {
         $products = DB::table('products')
@@ -253,7 +253,7 @@ class ProductController extends Controller
             ->whereColumn('products.onhand', '<=', 'products.alert')
             ->where('products.active', 1)
             ->select('products.*', 'categories.name as cname', 'units.name as uname')
-            ->paginate(4); // paginate if needed
+            ->paginate(4);
 
         return view('products.low', compact('products'));
     }

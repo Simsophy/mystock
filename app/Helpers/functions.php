@@ -2,53 +2,74 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\View;
 
-function check($permission_name, $action)
-{
-    $role_id = Auth::user()->role_id;
-    $q = DB::table('role_permissions')
-        ->join('permissions', 'role_permissions.permission_id', 'permissions.id')
-        ->select('role_permissions.list', 'role_permissions.insert', 'role_permissions.update', 'role_permissions.delete')
-        ->where('role_permissions.role_id', $role_id)
-        ->where('permissions.name', $permission_name);
-    switch($action)
+
+
+
+if (!function_exists('check')) {
+
+    function check($permission_name, $action)
     {
-        case 'insert':
-            $q = $q->where('role_permissions.insert', 1);
-            break;
-        case 'update':
-            $q = $q->where('role_permissions.update', 1);
-            break;
-        case 'delete':
-            $q = $q->where('role_permissions.delete', 1);
-            break;
-        case 'list':
-            $q = $q->where('role_permissions.list', 1);
-            break;
-        default:
-            break;
+        $user = Auth::user();
+        if (!$user) return false;
+
+        $q = DB::table('role_permissions')
+            ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
+            ->where('role_permissions.role_id', $user->role_id)
+            ->where('permissions.name', $permission_name);
+
+        switch ($action) {
+            case 'insert':
+                $q->where('role_permissions.insert', 1);
+                break;
+            case 'update':
+                $q->where('role_permissions.update', 1);
+                break;
+            case 'delete':
+                $q->where('role_permissions.delete', 1);
+                break;
+            case 'list':
+                $q->where('role_permissions.list', 1);
+                break;
+        }
+
+        return $q->exists();
     }
-    return ($q->count() > 0);
 }
 
+if (!function_exists('check')) {
 
-function page() {
-    $page = @$_GET['page'];
-    if (!$page) {
-        $page = 1;
+    function check($permission_name, $action)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return false;
+        }
+
+        $q = DB::table('role_permissions')
+            ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
+            ->where('role_permissions.role_id', $user->role_id)
+            ->where('permissions.name', $permission_name);
+
+        switch ($action) {
+            case 'insert':
+                $q->where('role_permissions.insert', 1);
+                break;
+
+            case 'update':
+                $q->where('role_permissions.update', 1);
+                break;
+
+            case 'delete':
+                $q->where('role_permissions.delete', 1);
+                break;
+
+            case 'list':
+                $q->where('role_permissions.list', 1);
+                break;
+        }
+
+        return $q->exists();
     }
-    return config('app.row') * ($page - 1) + 1;
-}
-
-function to_select($data, $name, $id = '') {
-    $select = "<select class='form-control' name='$name' id='$name'>";
-
-    foreach ($data as $d) {
-        $selected = $d->id == $id ? "selected" : "";
-        $select .= "<option value='{$d->id}' $selected>{$d->name}</option>";
-    }
-
-    $select .= "</select>";
-    return $select;
 }

@@ -24,20 +24,21 @@
                     <th>Unit</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach ($products as $index => $p)
-                <tr>
-                    <td>{{ $products->firstItem() + $index }}</td>
-                    <td>{{ $p->code }}</td>
-                    <td>{{ $p->name }}</td>
-                    <td>{{ number_format($p->price) }}</td>
-                    <td>{{ $p->cname }}</td>
-                    <td>{{ $p->onhand }}</td>
-                    <td>{{ $p->alert }}</td>
-                    <td>{{ $p->uname }}</td>
-                </tr>
-                @endforeach
-            </tbody>
+         <tbody>
+    @foreach ($products as $index => $p)
+    <tr>
+        <td>{{ $products->firstItem() + $index }}</td>
+        <td>{{ $p->code }}</td>
+        <td>{{ $p->name }}</td>
+        <td>{{ number_format($p->price) }}</td>
+        <td>{{ $p->cname }}</td>
+        <td>{{ $p->onhand }}</td>
+        <td>{{ $p->alert }}</td>
+        <td>{{ $p->uname }}</td>
+    </tr>
+    @endforeach
+</tbody>
+
         </table>
 
         <div class="mt-2">

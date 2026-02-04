@@ -27,10 +27,12 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($roles as $role)
-                <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>{{ $role->name }}</td>
+                @foreach($roles as $role)
+<tr>
+    <td>{{ $role->id }}</td>
+    <td>{{ $role->name }}</td> <td>
+        </td>
+
                     <td>
                         <a href="{{ route('permission.index', $role->id) }}" class="btn btn-info btn-xs">
                             <i class="fas fa-lock"></i> Permissions

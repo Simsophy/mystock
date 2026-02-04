@@ -18,13 +18,18 @@ class ProductImport implements ToCollection
 
         foreach ($rows as $row) {
             DB::table('products')->insert([
-                'code'        => $row[1],  // Adjust index to match your columns
-                'name'        => $row[2],
-                'price'       => $row[3],
-                'category_id' => $this->getCategoryId($row[4]), // get ID by category name
-                'active'      => 1,
-                // Add other fields as needed
-            ]);
+    'code'        => $row[0],
+    'name'        => $row[1],
+    'price'       => is_numeric($row[2]) ? $row[2] : 0, // safe numeric
+    'category_id' => $this->getCategoryId($row[3]) ?? 1, // fallback to 1 if not found
+    'unit_id'     => 1, // default unit
+    'alert'       => 0, // default alert
+    'active'      => 1,
+    'description' => $row[4] ?? '', // optional
+    'created_at'  => now(),
+    'updated_at'  => now(),
+]);
+
         }
     }
 

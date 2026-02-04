@@ -5,7 +5,7 @@
 @section('content')
 
 <h1> Company Info</h1>
-
+@if(check('category', 'edit'))
 <a href="{{ route('company.edit') }}" class="btn btn-sm btn-primary">Edit Company</a>
 
 <form action="{{ route('company.update') }}" method="POST" enctype="multipart/form-data">

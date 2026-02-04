@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 namespace App\Http\Controllers;
 use \App\Http\Middleware\Translate;
+use Illuminate\Support\Facades\Auth;
+
 
 
 use Illuminate\Http\Request;

@@ -6,6 +6,7 @@ use \App\Http\Middleware\Translate;
 use Illuminate\Http\Request;
 use View;
 use Auth;
+use DB;
 use App\Models\Role; // ✅ Import the Role model
 
 class RoleController extends Controller
@@ -23,7 +24,7 @@ class RoleController extends Controller
     // Show list of roles
     public function index()
     {
-        $roles = Role::all();
+       $roles = DB::table('roles')->get();
         return view('roles.index', compact('roles'));
     }
 

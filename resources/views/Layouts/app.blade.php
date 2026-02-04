@@ -157,6 +157,16 @@
 <script>
   function preview{event}
 </script>
+<script>
+  $.widget.bridge('uibutton', $.ui.button)
+</script>c="{{asset('theme/js/custom.js')}}"></script>
+<!-- overlayScrollbars -->
+<script src="{{asset('plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js')}}"></script>
+<script src="{{asset('plugins/photoviewer/photoviewer.min.js')}}"></script>
+<!-- AdminLTE App -->
+<script src="{{asset('theme/js/adminlte.js')}}"></script>
+
+<script src="{{asset('theme/js/custom.js')}}"></script>
 @yield('js')
  
  

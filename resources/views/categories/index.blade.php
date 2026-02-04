@@ -39,7 +39,7 @@
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $cat->name }}</td>
                 <td>
-                  
+                  @if(check('category', 'edit'))
                     <a href="{{ route('category.edit', $cat->id) }}" class="btn btn-success btn-xs">
                         <i class="fas fa-edit" title="Edit"></i> Edit
                     </a>
@@ -49,6 +49,7 @@
                         </a>
                   @endif
                 </td>
+                @endif
             </tr>
         @endforeach
     </tbody>
