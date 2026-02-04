@@ -11,8 +11,25 @@
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.min.css') }}" />
     <style>
         body.login-page {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 100%);
+            background-attachment: fixed;
             min-height: 100vh;
+            position: relative;
+        }
+        body.login-page::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(255,255,255,.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(255,255,255,.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .login-box {
+            position: relative;
+            z-index: 1;
         }
     </style>
 </head>
