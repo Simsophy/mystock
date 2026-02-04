@@ -98,5 +98,21 @@ Route::get('/home', [HomeController::class, 'index'])->middleware('auth')->name(
 
 Route::get('lang/{lang}', [UserController::class,'change_lang'])->name('user.lang');
 });
+
+// Registration routes (outside auth middleware to allow guests)
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'register']);
+
+// Password reset routes
+Route::get('/password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::post('/password/verify-code', [ResetPasswordController::class, 'verifyCode'])->name('password.verify-code');
+Route::get('/password/reset-form', [ResetPasswordController::class, 'showResetForm'])->name('password.reset-form');
+Route::post('/password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
+
 Auth::routes();
 
