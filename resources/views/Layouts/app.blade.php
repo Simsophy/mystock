@@ -51,9 +51,13 @@
         <li class="nav-item dropdown">
             <a class="nav-link" data-toggle="dropdown" href="#" role="button">
 
-                {{ Auth::user()->username }}
-                <i class="fas fa-angle-down"></i>
-            </a>
+            @if(Auth::check())
+    {{ Auth::user()->username }}
+    <i class="fas fa-angle-down"></i>
+@else
+    Guest
+@endif
+
         <div class="dropdown-menu dropdown-menu-right">
     <a href="{{route ('home') }}" class="dropdown-item">
         <i class="fas fa-home mr-2"></i>Profile

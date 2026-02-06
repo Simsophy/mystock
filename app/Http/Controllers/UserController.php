@@ -14,27 +14,25 @@ class UserController extends Controller
     /**
      * Set the active navigation item for the view.
      */
-public function __construct()
-{
-    // Only set locale if user is logged in
-    $this->middleware(function ($request, $next) {
-        if (Auth::check() && Auth::user()->lang) {
-            app()->setLocale(Auth::user()->lang);
-        }
-        return $next($request);
-    });
+    public function __construct()
+    {
+        // Only set locale if user is logged in
+        $this->middleware(function ($request, $next) {
+            if (Auth::check() && Auth::user()->lang) {
+                app()->setLocale(Auth::user()->lang);
+            }
+            return $next($request);
+        });
 
-    // Share a variable with all views
-    View::share('active', 'user');
-}
+        // Share a variable with all views
+        View::share('active', 'user');
+    }
 
     /**
      * List all users, joining with the roles table to get role names.
      */
     public function index()
     {
-        // Join the users and roles tables to get the role name for each user.
-        // Assumes your roles table is named 'roles' and the foreign key is 'role_id'.
         $users = DB::table('users')
                     ->leftJoin('roles', 'users.role_id', '=', 'roles.id')
                     ->select('users.*', 'roles.name as role_name')
@@ -47,11 +45,10 @@ public function __construct()
     }
 
     /**
-     * Show the form to create a new user, with a list of available roles.
+     * Show the form to create a new user.
      */
     public function create()
     {
-        // Get all roles to populate the dropdown in the creation form.
         $roles = DB::table('roles')->get();
         return view('users.create', compact('roles'));
     }
@@ -59,39 +56,40 @@ public function __construct()
     /**
      * Handle form submission and save a new user.
      */
-   public function store(Request $request)
-{
-    // Validate fields
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'username' => 'required|string|unique:users,username',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|string|min:6',
-        'role_id' => 'required|exists:roles,id',
-         'lang' => 'required|in:en,kh,cn', 
-        'photo' => 'nullable|image|max:2048',
-    ]);
+    public function store(Request $request)
+    {
+        // Validate fields
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255', // allow duplicates
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'role_id' => 'required|exists:roles,id',
+            'lang' => 'required|in:en,kh,cn', 
+            'photo' => 'nullable|image|max:2048',
+        ]);
 
-    // Handle photo upload
-    if ($request->hasFile('photo')) {
-        $file = $request->file('photo');
-        $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
-        $file->move(public_path('logos'), $fileName);
-        $validated['photo'] = 'logos/' . $fileName;
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('logos'), $fileName);
+            $validated['photo'] = 'logos/' . $fileName;
+        }
+
+        // Hash the password
+        $validated['password'] = Hash::make($validated['password']);
+
+        // Create user
+        User::create($validated);
+
+        return redirect()->route('user.index')->with('success', 'User created successfully.');
     }
 
-    // Hash the password
-    $validated['password'] = Hash::make($validated['password']);
-
-    // Create user
-    User::create($validated);
-
-    return redirect()->route('user.index')->with('success', 'User created successfully.');
-}
     public function edit($id)
     {
         $user = DB::table('users')->where('id', $id)->first();
-        $roles = DB::table('roles')->get(); // Get roles for the dropdown
+        $roles = DB::table('roles')->get();
 
         if (!$user) {
             abort(404);
@@ -103,36 +101,29 @@ public function __construct()
     /**
      * Update an existing user's details.
      */
- public function update(Request $request, $id)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'username' => "required|string|max:255|unique:users,username,$id",
-        'email' => "required|email|unique:users,email,$id",
-        'role_id' => 'required|exists:roles,id',
-        'lang' => 'required',
-        'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
-
-    $user = DB::table('users')->find($id);
-if($request->hasFile('photos')) {
-    foreach($request->file('photos') as $photo) {
-        $path = $photo->store('users', 'public');
-        UserPhoto::create([
-            'user_id' => $userId, // after inserting user
-            'photo' => $path
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => "required|string|max:255", // allow duplicate usernames
+            'email' => "required|email|unique:users,email,$id",
+            'role_id' => 'required|exists:roles,id',
+            'lang' => 'required|in:en,kh,cn',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Handle photo upload if exists
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('logos'), $fileName);
+            $validated['photo'] = 'logos/' . $fileName;
+        }
+
+        DB::table('users')->where('id', $id)->update($validated);
+
+        return redirect()->route('user.index')->with('success', 'User updated successfully.');
     }
-}
-
-
-
-    DB::table('users')->where('id', $id)->update($validated);
-
-    return redirect()->route('user.index')->with('success', 'User updated successfully.');
-}
-
-
 
     /**
      * Delete a user.
@@ -153,40 +144,31 @@ if($request->hasFile('photos')) {
         return view('users.change-password');
     }
 
-   public function changePassword(Request $request, $id)
-{
-    $request->validate([
-        'new_password' => 'required|string|min:8|confirmed',
-    ]);
+    public function changePassword(Request $request, $id)
+    {
+        $request->validate([
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
 
-    $user = User::findOrFail($id);
-    $user->password = Hash::make($request->new_password);
-    $user->save();
+        $user = User::findOrFail($id);
+        $user->password = Hash::make($request->new_password);
+        $user->save();
 
-    return redirect()->back()->with('success', 'Password changed successfully.');
-}
+        return redirect()->back()->with('success', 'Password changed successfully.');
+    }
 
-  
     public function logout(Request $request)
     {
         Auth::logout();
-
-     
-
-        // Redirect where you want after logout
         return redirect()->route('login')->with('success', 'You have been logged out.');
-        // or ->redirect('/')
     }
-   public function change_lang($lang)
-{
-  
+
+    public function change_lang($lang)
+    {
         DB::table('users')
             ->where('id', Auth::user()->id)
             ->update(['lang' => $lang]);
-    
 
-    return redirect()->back();
+        return redirect()->back();
+    }
 }
-
-}
-
