@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: laravel-app
+    env: docker
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: PHP_MEMORY_LIMIT
+        value: 2G
+      - key: COMPOSER_MEMORY_LIMIT
+        value: 2G
+      - key: COMPOSER_NO_INTERACTION
+        value: "1"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_PORT
+        value: "5432"
